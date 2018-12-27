@@ -5,10 +5,14 @@ import android.databinding.BindingAdapter;
 import android.support.annotation.StringRes;
 import android.support.v4.text.util.LinkifyCompat;
 import android.support.v7.widget.AppCompatTextView;
+import android.text.Html;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.widget.TextView;
 
 import com.mxt.anitrend.AnilistMarkdown;
 import com.mxt.anitrend.base.interfaces.view.CustomView;
@@ -55,7 +59,7 @@ public class RichMarkdownTextView extends AppCompatTextView implements CustomVie
                 .factory(new SpannableFactoryDef())
                 .asyncDrawableLoader(AsyncDrawableLoader.create())
                 .htmlAllowNonClosedTags(true)
-                .softBreakAddsNewLine(true)
+                .softBreakAddsNewLine(false)
                 .build();
     }
 
@@ -68,15 +72,18 @@ public class RichMarkdownTextView extends AppCompatTextView implements CustomVie
     }
 
     private void renderMarkdown(String content) {
-
         Node node;
-
         if(TextUtils.isEmpty(content))
             node = parser.parse("<b>No content available</b>");
-        else
-            node = parser.parse(content);
+        else {
+            String filteredContent = content;
+            while (content.charAt(content.length() - 1) == '\n')
+                filteredContent = content.substring(content.length() - 1, content.length());
+            String temp = filteredContent.replaceAll("\n", "<br />");
+            node = parser.parse(temp);
+        }
 
-        final CharSequence text = renderer.render(configuration, node);
+        CharSequence text = renderer.render(configuration, node);
         Markwon.scheduleDrawables(this);
         Markwon.setText(this, text);
     }
